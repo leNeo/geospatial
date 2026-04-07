@@ -333,8 +333,8 @@ patch(GeoengineRenderer.prototype, {
                 "jpeg"
             );
             tileLayer.set("title", raster.name);
-            tileLayer.setVisible(raster.isVisible !== false);
-            tileLayer.setOpacity(raster.opacity || 1.0);
+            tileLayer.setVisible(!raster.overlay);
+            tileLayer.setOpacity(raster.opacity ?? 1.0);
             // Insert at position 0 (below all other layers)
             layers.insertAt(0, tileLayer);
         }
