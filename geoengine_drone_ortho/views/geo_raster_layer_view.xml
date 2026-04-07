@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record model="ir.ui.view" id="geo_raster_view_form_xyz_tiles">
+        <field name="name">geoengine.raster.layer.form.xyz_tiles</field>
+        <field name="model">geoengine.raster.layer</field>
+        <field name="inherit_id" ref="base_geoengine.geo_raster_view_form" />
+        <field name="arch" type="xml">
+            <!-- Make url required for XYZ tiles too -->
+            <xpath expr="//field[@name='url']" position="attributes">
+                <attribute name="required">is_wmts or is_wms or is_xyz_tiles</attribute>
+            </xpath>
+            <field name="has_type" position="before">
+                <field name="is_xyz_tiles" invisible="1" />
+                <group
+                    string="XYZ Tiles"
+                    invisible="not is_xyz_tiles"
+                    colspan="4"
+                >
+                    <field name="xyz_min_zoom" />
+                    <field name="xyz_max_zoom" />
+                    <field name="xyz_tile_projection" required="is_xyz_tiles" />
+                    <field name="xyz_cross_origin" />
+                    <field name="xyz_tile_extent" colspan="4" />
+                </group>
+            </field>
+        </field>
+    </record>
+</odoo>
