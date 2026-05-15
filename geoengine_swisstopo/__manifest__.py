@@ -14,9 +14,6 @@
         "views/geo_raster_layer_view.xml",
     ],
     "assets": {
-        "base_geoengine.assets_jsLibs_geoengine": [
-            "/geoengine_swisstopo/static/lib/proj4js/proj4.js",
-        ],
         "web.assets_backend": [
             "geoengine_swisstopo/static/src/js/**/*",
         ],

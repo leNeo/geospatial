@@ -2,23 +2,30 @@
 
 /* global proj4, ol */
 
-/**
- * proj4 + OpenLayers projection registration.
- *
- * OpenLayers only knows EPSG:3857 and EPSG:4326 out of the box.
- * For any other SRID we must register via proj4js, then call
- * ol.proj.proj4.register(proj4).
- */
+import {loadJS} from "@web/core/assets";
+
+const PROJ4_PATH = "/geoengine_swisstopo/static/lib/proj4js/proj4.js";
 
 let _registered = false;
+let _registerPromise = null;
 
 /**
  * Register commonly used projections with proj4 and OpenLayers.
  * Safe to call multiple times — only runs once.
  */
-export function ensureProjectionsRegistered() {
+export async function ensureProjectionsRegistered() {
     if (_registered) {
         return;
+    }
+    if (!_registerPromise) {
+        _registerPromise = _doRegister();
+    }
+    return _registerPromise;
+}
+
+async function _doRegister() {
+    if (!window.proj4) {
+        await loadJS(PROJ4_PATH);
     }
     if (typeof proj4 === "undefined") {
         console.error(

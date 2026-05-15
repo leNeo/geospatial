@@ -17,6 +17,7 @@
  */
 
 import {GeoengineRenderer} from "@base_geoengine/js/views/geoengine/geoengine_renderer/geoengine_renderer.esm";
+import {onWillStart} from "@odoo/owl";
 import {patch} from "@web/core/utils/patch";
 import {
     ensureProjectionsRegistered,
@@ -173,10 +174,11 @@ function getMainGeoFieldSrid(renderer) {
 // ---- Patch ----
 
 patch(GeoengineRenderer.prototype, {
-    /**
-     * After the map is created, register projections and store the main
-     * model's SRID for use by draw/edit operations.
-     */
+    setup() {
+        super.setup(...arguments);
+        onWillStart(() => ensureProjectionsRegistered());
+    },
+
     renderMap() {
         super.renderMap(...arguments);
         if (this.map) {
