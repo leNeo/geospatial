@@ -1,0 +1,242 @@
+# Gestion des branches — leNeo/geospatial
+
+> Documentation interne du workflow de contribution multi-modules vers OCA/geospatial.
+> Dernière mise à jour : 2026-05-16 (ajout module pont `geoengine_drone_ortho_swisstopo`)
+
+## 1. Vue d'ensemble
+
+Ce dépôt est un **fork** de [OCA/geospatial](https://github.com/OCA/geospatial).
+Il contient plusieurs modules Odoo migrés vers la 19.0. La contribution à OCA suit la règle :
+
+> **1 PR = 1 module**
+
+Pour respecter cette règle tout en gardant un environnement de développement
+cohérent (où tous les modules cohabitent), on adopte un **workflow hybride**.
+
+## 2. Architecture des branches
+
+| Branche | Rôle | Contenu | Destination |
+|---|---|---|---|
+| `19.0-mig-base_geoengine` | **Branche de dev** (intégration) | Tous les modules ensemble | Jamais poussée vers OCA |
+| `19.0` | OCA-ready — `base_geoengine` | base_geoengine seul | PR OCA #446 |
+| `19.0-geoengine_swisstopo` | OCA-ready — `geoengine_swisstopo` | base_geoengine + swisstopo | Future PR OCA |
+| `19.0-geoengine_drone_ortho` | OCA-ready — `geoengine_drone_ortho` | base_geoengine + drone_ortho | Future PR OCA |
+| `19.0-geoengine_drone_ortho_swisstopo` | OCA-ready — **module pont** | base + swisstopo + drone_ortho + pont | Future PR OCA (après les 2 dépendances) |
+
+### Schéma
+
+```
+                  ┌────────────────────────────────┐
+                  │  19.0-mig-base_geoengine       │  ← développement quotidien
+                  │  (tous modules, tout-en-un)    │
+                  └───────────┬────────────────────┘
+                              │ cherry-pick (1 commit / module)
+                              ▼
+   ┌──────────┬───────────────┼───────────────┬─────────────────────────┐
+   ▼          ▼               ▼               ▼                         ▼
+ ┌──────┐ ┌────────────┐ ┌──────────────┐ ┌──────────────────────────────┐
+ │ 19.0 │ │ …_swiss…   │ │ …_drone_ortho│ │ …_drone_ortho_swisstopo      │
+ │(base)│ │(base+swiss)│ │ (base+drone) │ │(base+swiss+drone+pont)       │
+ └──┬───┘ └──────┬─────┘ └──────┬───────┘ └──────────────┬───────────────┘
+    │PR#446      │PR future     │PR future               │PR future
+    ▼            ▼              ▼                        ▼ (après les 3 autres)
+                          OCA/geospatial:19.0
+```
+
+## 3. Convention de commit
+
+On utilise les **Conventional Commits** avec scope = nom du module :
+
+```
+feat(base_geoengine): ajout du support des projections multiples
+fix(geoengine_swisstopo): correction de l'opacité des couches raster
+refactor(base_geoengine): chargement dynamique des libs JS
+[ADD] geoengine_drone_ortho: module initial XYZ/TMS pour orthos drones
+```
+
+**Règle d'or :** *1 commit ne touche qu'à 1 seul module* (sauf cas exceptionnel
+documenté en message de commit).
+
+## 4. Workflow quotidien
+
+### 4.1 Développement
+
+Tout le travail se fait sur `19.0-mig-base_geoengine` :
+
+```bash
+git checkout 19.0-mig-base_geoengine
+# … coder, tester …
+git add path/du/module/
+git commit -m "feat(nom_du_module): description courte"
+git push origin 19.0-mig-base_geoengine
+```
+
+### 4.2 Propager une modif vers la branche OCA-ready correspondante
+
+Une fois un commit prêt, on le **cherry-pick** vers la branche OCA-ready :
+
+```bash
+# Exemple : un commit qui touche base_geoengine
+git checkout 19.0
+git pull --rebase origin 19.0
+git cherry-pick <SHA_DU_COMMIT>
+# Si conflit (modify/delete sur des fichiers d'un autre module) :
+git rm path/de/l-autre/module/fichier
+git cherry-pick --continue
+git push origin 19.0
+```
+
+### 4.3 Mettre à jour les branches OCA-ready des modules dépendants
+
+Quand on modifie `base_geoengine`, il faut **propager** la mise à jour aux
+branches `…_swisstopo-clean` et `…_drone_ortho`, qui contiennent toutes deux
+`base_geoengine` :
+
+```bash
+git checkout 19.0-geoengine_swisstopo-clean
+git pull --rebase origin 19.0     # récupère le nouveau commit de base_geoengine
+git push origin 19.0-geoengine_swisstopo-clean
+```
+
+Idem pour `19.0-geoengine_drone_ortho`.
+
+> **Pourquoi `pull --rebase` et pas `merge` ?**
+> Pour garder un historique linéaire propre, exigé par OCA.
+
+## 5. Création d'une nouvelle branche OCA-ready
+
+Pour ajouter un nouveau module (ex : `geoengine_xyz`) :
+
+```bash
+# 1. Partir de 19.0 (qui ne contient que base_geoengine)
+git checkout 19.0
+git pull --rebase origin 19.0
+git checkout -b 19.0-geoengine_xyz
+
+# 2. Copier les fichiers du module depuis la branche de dev
+git checkout origin/19.0-mig-base_geoengine -- geoengine_xyz/
+
+# 3. Commiter en 1 seul commit
+git add geoengine_xyz/
+git commit -m "[ADD] geoengine_xyz: description du module"
+
+# 4. Pousser
+git push origin 19.0-geoengine_xyz
+```
+
+Vérifier ensuite sur GitHub via la page de comparaison :
+
+```
+https://github.com/leNeo/geospatial/compare/19.0...19.0-geoengine_xyz
+```
+
+→ doit afficher **1 commit, N fichiers, "Able to merge"** (1 seul contributeur).
+
+## 6. Création d'une PR vers OCA
+
+> ⚠️ Soumettre une PR uniquement quand le module précédent est mergé sur OCA
+> (sinon la diff inclura les fichiers du module en attente).
+
+1. Aller sur `https://github.com/OCA/geospatial/compare/19.0...leNeo:geospatial:19.0-geoengine_xyz`
+2. Cliquer "Create pull request"
+3. Titre : `[19.0][ADD] geoengine_xyz: description courte`
+4. Description : suivre le template OCA (Summary, Changes, Test plan)
+5. Vérifier que `pre-commit run --all-files` passe en local avant soumission
+
+## 7. État courant des PRs OCA
+
+| Module | PR OCA | Statut |
+|---|---|---|
+| `base_geoengine` | [#446](https://github.com/OCA/geospatial/pull/446) | 🟡 Open — review en cours |
+| `geoengine_swisstopo` | _(pas encore créée)_ | ⏳ Attend merge #446 |
+| `geoengine_drone_ortho` | _(pas encore créée)_ | ⏳ Attend merge `geoengine_swisstopo` (par sécurité, ordre logique) |
+| `geoengine_drone_ortho_swisstopo` | _(pas encore créée)_ | ⏳ Attend merge des deux dépendances |
+
+**Ordre de soumission** :
+1. `base_geoengine` (#446)
+2. `geoengine_swisstopo`
+3. `geoengine_drone_ortho` *(plus de dépendance JS bloquante — voir §8.1)*
+4. `geoengine_drone_ortho_swisstopo` *(module pont, dépend des deux précédents)*
+
+## 8. Points d'attention / Dette technique
+
+### 8.1 Dépendance JS croisée — `geoengine_drone_ortho` ✅ RÉSOLU
+
+**État précédent** : `geoengine_drone_ortho/static/src/js/geoengine_renderer_patch.esm.js`
+importait `SWISSTOPO_EXTENT_2056` et `SWISSTOPO_RESOLUTIONS` depuis
+`@geoengine_swisstopo/js/swisstopo_raster.esm`, sans déclarer la dépendance
+dans `__manifest__.py`. Incompatible avec la règle OCA "1 PR = 1 module
+autonome".
+
+**Solution retenue** : pattern **module pont** (bridge module).
+
+1. `geoengine_drone_ortho` rendu autonome :
+   - Import `@geoengine_swisstopo` supprimé.
+   - Cas spécial `if (srcProjCode === "EPSG:2056")` retiré.
+   - Nouveau point d'extension `_buildXyzTileGrid(srcProjCode, srcProj, background)`
+     exposé sur `GeoengineRenderer.prototype` — retourne par défaut une grille
+     WebMercator générique via `ol.tilegrid.createXYZ`.
+
+2. Nouveau module `geoengine_drone_ortho_swisstopo` :
+   - `depends: ["geoengine_drone_ortho", "geoengine_swisstopo"]`
+   - `auto_install: True` → s'active automatiquement si les deux modules sont présents.
+   - Patche `_buildXyzTileGrid` pour retourner une `ol.tilegrid.TileGrid` avec
+     `SWISSTOPO_EXTENT_2056` + `SWISSTOPO_RESOLUTIONS` quand
+     `srcProjCode === "EPSG:2056"`, sinon délègue à `super`.
+
+**Bénéfice** : chaque module est OCA-soumissible indépendamment, et la grille
+Swisstopo s'active automatiquement quand les deux modules sont installés
+ensemble.
+
+### 8.2 Workflow `test.yml` / PostGIS
+
+Le workflow CI `.github/workflows/test.yml` a été modifié pour utiliser
+`postgis/postgis:14-3.5` (nécessaire aux tests de base_geoengine). Cette
+modification est conforme aux migrations 17.0 et 18.0 précédentes.
+
+## 9. Commandes utiles
+
+### Voir la diff d'une branche par rapport à `19.0`
+
+```bash
+git log --oneline 19.0..19.0-geoengine_xyz
+git diff --stat 19.0...19.0-geoengine_xyz
+```
+
+### Vérifier qu'une branche est "Able to merge" sur GitHub
+
+```
+https://github.com/leNeo/geospatial/compare/19.0...<branch>
+```
+
+### Nettoyer une branche locale obsolète
+
+```bash
+git branch -D <branche>
+git push origin --delete <branche>   # supprime aussi sur GitHub
+```
+
+### Réinitialiser une branche OCA-ready à partir de zéro
+
+Si une branche OCA-ready est devenue trop "sale" (mauvais commits, doublons),
+la recréer depuis `19.0` :
+
+```bash
+git checkout 19.0
+git checkout -b 19.0-geoengine_xyz-clean
+git checkout origin/19.0-mig-base_geoengine -- geoengine_xyz/
+git commit -m "[ADD] geoengine_xyz: description"
+git push origin 19.0-geoengine_xyz-clean
+# Une fois validé, supprimer l'ancienne et renommer
+```
+
+## 10. Checklist avant chaque PR OCA
+
+- [ ] Branche basée sur `OCA/geospatial:19.0` à jour
+- [ ] Diff = 1 commit, N fichiers, **un seul contributeur**
+- [ ] GitHub indique "Able to merge"
+- [ ] `pre-commit run --all-files` ✅
+- [ ] Tests passent : `odoo-bin -d test_db -i <module> --test-enable --stop-after-init`
+- [ ] Pas de dépendance JS/Python cachée vers un autre module non déclaré dans `__manifest__.py`
+- [ ] Headers de license OCA présents (`# Copyright …` + `# License AGPL-3.0`)
+- [ ] `readme/` complet (DESCRIPTION, CONTRIBUTORS, HISTORY, USAGE, INSTALL si nécessaire)
