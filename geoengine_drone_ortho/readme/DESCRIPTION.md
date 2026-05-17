@@ -7,4 +7,5 @@ This module provides:
 - Support for TiTiler, MapProxy, or any XYZ/TMS tile server
 - Configurable zoom levels, tile extent, and projection
 - On-the-fly reprojection when tile projection differs from map projection
-- Compatible with geoengine_swisstopo when both are installed
+- Extension hook ``_buildXyzTileGrid`` for companion modules to provide
+  custom tile grids (e.g. Swiss LV95 — see ``geoengine_drone_ortho_swisstopo``)
