@@ -188,11 +188,38 @@ autonome".
 Swisstopo s'active automatiquement quand les deux modules sont installés
 ensemble.
 
-### 8.2 Workflow `test.yml` / PostGIS
+### 8.2 Workflow `test.yml` / PostGIS ⚠️ TRANSITOIRE (patch manuel)
 
-Le workflow CI `.github/workflows/test.yml` a été modifié pour utiliser
-`postgis/postgis:14-3.5` (nécessaire aux tests de base_geoengine). Cette
-modification est conforme aux migrations 17.0 et 18.0 précédentes.
+Le workflow CI `.github/workflows/test.yml` a été modifié **manuellement** pour
+utiliser `postgis/postgis:14-3.5` (nécessaire aux tests de `base_geoengine`).
+Cette modification est conforme aux migrations 17.0 et 18.0 précédentes.
+
+> ⚠️ **C'est un patch manuel d'un fichier généré par Copier.** Il sera écrasé
+> à chaque `copier update`. Il doit être réappliqué tant que le template OCA
+> du dépôt n'a pas été régénéré avec le support natif de l'image PostgreSQL
+> (voir solution propre ci-dessous).
+
+**Solution propre (à venir) — paramètre `postgres_image` du template OCA**
+
+La PR [OCA/oca-addons-repo-template#355](https://github.com/OCA/oca-addons-repo-template/pull/355)
+(mergée le 2026-05-29) ajoute un paramètre `postgres_image` au template :
+on peut désormais déclarer l'image PostgreSQL dans `.copier-answers.yml` au
+lieu de patcher `test.yml` à la main.
+
+Migration prévue, en **2 temps** (opérations **niveau dépôt**, hors PR de
+module — ne PAS inclure dans la PR #446 de `base_geoengine`) :
+
+1. Attendre que OCA/geospatial bumpe le template à un tag **> v1.35** incluant
+   la PR #355 (`copier update` lancé centralement par les mainteneurs / le bot).
+2. Renseigner dans `.copier-answers.yml` :
+   ```yaml
+   postgres_image: postgis/postgis:14-3.5
+   ```
+   puis régénérer. Le `test.yml` produit contiendra alors PostGIS nativement,
+   et le patch manuel ci-dessus pourra être **supprimé de toutes les branches**.
+
+> Tant que le template n'est pas bumpé, garder le patch manuel : sans lui, plus
+> de PostGIS en CI → les tests de `base_geoengine` échouent.
 
 ## 9. Commandes utiles
 

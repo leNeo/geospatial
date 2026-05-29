@@ -17,6 +17,11 @@ odoo_test_flavor: Both
 odoo_version: 19.0
 org_name: Odoo Community Association (OCA)
 org_slug: OCA
+# postgres_image: postgis/postgis:14-3.5
+# ^ À ACTIVER (décommenter) une fois le template bumpé à un tag > v1.35
+#   incluant OCA/oca-addons-repo-template#355. Permet de générer test.yml
+#   avec PostGIS nativement et de supprimer le patch manuel (voir BRANCHES.md §8.2).
+#   Inactif pour l'instant : ignoré tant que _commit reste v1.35.
 rebel_module_groups: []
 repo_description: geospatial
 repo_name: geospatial
