@@ -147,13 +147,24 @@ https://github.com/leNeo/geospatial/compare/19.0...19.0-geoengine_xyz
 
 | Module | PR OCA | Statut |
 |---|---|---|
-| `base_geoengine` | [#446](https://github.com/OCA/geospatial/pull/446) | 🟡 Open — review en cours |
-| `geoengine_swisstopo` | _(pas encore créée)_ | ⏳ Attend merge #446 |
+| `base_geoengine` | [#465](https://github.com/OCA/geospatial/pull/465) | 🟢 Open — **PR consolidée**, CI verte, en review |
+| `geoengine_swisstopo` | _(pas encore créée)_ | ⏳ Attend merge **#465** |
 | `geoengine_drone_ortho` | _(pas encore créée)_ | ⏳ Attend merge `geoengine_swisstopo` (par sécurité, ordre logique) |
 | `geoengine_drone_ortho_swisstopo` | _(pas encore créée)_ | ⏳ Attend merge des deux dépendances |
 
+> **Convergence base_geoengine (consolidation #465).** Il y avait 3 migrations
+> parallèles : [#414](https://github.com/OCA/geospatial/pull/414) (weinni2000),
+> notre [#446](https://github.com/OCA/geospatial/pull/446), et la PR
+> [weinni2000/geospatial#7](https://github.com/weinni2000/geospatial/pull/7)
+> (juppe : montée libs OL/Chroma/Geostats, fix WKB, cherry-pick #431).
+> weinni2000 a proposé de passer la main → nous avons **consolidé le tout en
+> [#465](https://github.com/OCA/geospatial/pull/465)** : base #414 + improvements
+> de juppe + notre **fix sécurité `ir.rule`** (voir §8.3). Crédits préservés
+> (`Co-authored-by` / historique par commit).
+> Suites : **#446 fermée** (superseded), #414 à fermer par weinni2000, PR#7 intégrée.
+
 **Ordre de soumission** :
-1. `base_geoengine` (#446)
+1. `base_geoengine` — **#465** (consolidée)
 2. `geoengine_swisstopo`
 3. `geoengine_drone_ortho` *(plus de dépendance JS bloquante — voir §8.1)*
 4. `geoengine_drone_ortho_swisstopo` *(module pont, dépend des deux précédents)*
@@ -220,6 +231,26 @@ module — ne PAS inclure dans la PR #446 de `base_geoengine`) :
 
 > Tant que le template n'est pas bumpé, garder le patch manuel : sans lui, plus
 > de PostGIS en CI → les tests de `base_geoengine` échouent.
+
+### 8.3 Régression sécurité `ir.rule` sur geo-opérateurs indirects ✅ CORRIGÉ (#465)
+
+**Problème** : la migration 19.0 (#414) a remplacé `self._apply_ir_rules(rel_query, "read")`
+(API supprimée en 19.0) par `model._check_field_access(current_field, "read")`
+dans `base_geoengine/expressions.py`. Ce n'est **pas équivalent** : les record
+rules (`ir.rule`) n'étaient plus appliquées à la **sous-requête spatiale** des
+geo-opérateurs indirects (forme `dict`, ex. `{"dummy.zip.the_geom": [...]}`).
+→ Un utilisateur non-admin pouvait matcher des enregistrements liés qu'il n'a
+pas le droit de voir (contournement row-level security).
+
+**Pourquoi non détecté** : tous les tests tournent en **superuser**
+(`TransactionCase` = `SUPERUSER_ID`), donc les `ir.rule` ne filtrent rien.
+
+**Fix (#465)** : `where_calc()` applique désormais les record rules comme le
+fait `BaseModel._search` (bloc `# security access domain`), garde sur
+`model.env.su`. Ligne `_check_field_access` erronée retirée. Test de
+non-régression ajouté (`test_geo_search_indirect_respects_record_rules` :
+utilisateur non-admin + `ir.rule` scoping un groupe → la sous-requête respecte
+la règle). Validé en CI OCA.
 
 ## 9. Commandes utiles
 
