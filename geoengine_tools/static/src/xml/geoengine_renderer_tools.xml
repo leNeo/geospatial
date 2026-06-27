@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<templates>
+    <t
+        t-name="geoengine_tools.GeoengineRendererDrawOnRecord"
+        t-inherit="base_geoengine.GeoengineRenderer"
+        t-inherit-mode="extension"
+    >
+        <xpath expr="//RecordsPanel" position="attributes">
+            <attribute name="drawOnRecord.bind">drawOnRecord</attribute>
+        </xpath>
+    </t>
+</templates>

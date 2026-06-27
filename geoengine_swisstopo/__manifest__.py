@@ -9,12 +9,14 @@
     "author": "Camptocamp, Caravanes Treyvaud S.A., Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/geospatial",
     "license": "AGPL-3",
-    "depends": ["base_geoengine"],
+    "depends": ["base_geoengine", "geoengine_tools"],
     "data": [
         "views/geo_raster_layer_view.xml",
     ],
     "assets": {
         "web.assets_backend": [
+            # proj4 must load before the patch so EPSG:2056 can be registered.
+            "geoengine_swisstopo/static/lib/proj4js/proj4.js",
             "geoengine_swisstopo/static/src/js/**/*",
         ],
     },
