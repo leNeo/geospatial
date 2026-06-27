@@ -97,6 +97,10 @@ patch(GeoengineRenderer.prototype, {
                     new ol.View({
                         projection: proj2056,
                         resolutions: SWISSTOPO_VIEW_RESOLUTIONS,
+                        // maxZoom is NOT derived from resolutions.length in OL;
+                        // without this it stays at the default (28) and the
+                        // finest resolution levels are unreachable.
+                        maxZoom: SWISSTOPO_VIEW_RESOLUTIONS.length - 1,
                         center: ol.extent.getCenter(SWISSTOPO_EXTENT_2056),
                         zoom: 16,
                         extent: SWISSTOPO_EXTENT_2056,
