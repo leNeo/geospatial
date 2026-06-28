@@ -391,6 +391,13 @@ that lets a user redraw the geometry of an existing record
 (<tt class="docutils literal">drawOnRecord</tt>).</li>
 <li>Generic geometry / SRID utilities (<tt class="docutils literal">geo_utils</tt>): WKB hex decoding,
 Polygon → MultiPolygon normalization and SRID resolution helpers.</li>
+<li>A measure toolbox available to every user (read-only): live GPS
+(WGS84) coordinates of the mouse on hover, a distance ruler, a polygon
+surface/perimeter tool, a proximity check that flags pairs of objects
+closer than a given threshold, and clipboard export of the last / all
+measurements. Measurements are geodesic (<tt class="docutils literal">ol.sphere</tt>), so they stay
+correct in any map projection (e.g. EPSG:2056 with
+<tt class="docutils literal">geoengine_swisstopo</tt>).</li>
 </ul>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
@@ -411,6 +418,24 @@ Polygon → MultiPolygon normalization and SRID resolution helpers.</li>
 panel and click the pencil button: the record switches to edit mode and
 you can draw its new geometry on the map; it is saved automatically when
 the drawing ends.</p>
+<p>A measure toolbox is available on the right side of the map for every
+user:</p>
+<ul class="simple">
+<li><strong>Coordinates</strong> (crosshairs): toggle on, then move the mouse over the
+map to read the live GPS (WGS84) coordinates. In a projected CRS the
+native E/N coordinates are shown too.</li>
+<li><strong>Distance</strong> (horizontal arrows): click to add points, double-click to
+finish; the geodesic length of the line is displayed.</li>
+<li><strong>Surface</strong> (square): click to draw a polygon, double-click to finish;
+the geodesic area and perimeter are displayed.</li>
+<li><strong>Proximity</strong> (compress): enter a minimum distance (e.g. 4 m); every
+pair of map objects (parcels) closer than that threshold is
+highlighted with the measured gap.</li>
+<li><strong>Copy last</strong> (copy): copy the last measurement to the clipboard.</li>
+<li><strong>Copy all</strong> (clipboard): copy every measurement taken to the
+clipboard.</li>
+<li><strong>Eraser</strong>: clear all measurements and return to normal selection.</li>
+</ul>
 <p>For developers, the module patches <tt class="docutils literal">GeoengineRenderer</tt> and exposes
 <tt class="docutils literal">startDrawInteraction</tt>, <tt class="docutils literal">getGeometryFieldName</tt> and <tt class="docutils literal">drawOnRecord</tt>
 on the prototype, plus generic helpers importable from
