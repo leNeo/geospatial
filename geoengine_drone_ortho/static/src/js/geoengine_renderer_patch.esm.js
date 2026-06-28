@@ -129,11 +129,7 @@ patch(GeoengineRenderer.prototype, {
             const srcProjCode = background.xyz_tile_projection || "EPSG:3857";
             const srcProj = ol.proj.get(srcProjCode);
 
-            const tileGrid = this._buildXyzTileGrid(
-                srcProjCode,
-                srcProj,
-                background
-            );
+            const tileGrid = this._buildXyzTileGrid(srcProjCode, srcProj, background);
 
             const sourceOpts = {
                 url: background.url,

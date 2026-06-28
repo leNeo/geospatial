@@ -9,20 +9,6 @@ const PROJ4_PATH = "/geoengine_swisstopo/static/lib/proj4js/proj4.js";
 let _registered = false;
 let _registerPromise = null;
 
-/**
- * Register commonly used projections with proj4 and OpenLayers.
- * Safe to call multiple times — only runs once.
- */
-export async function ensureProjectionsRegistered() {
-    if (_registered) {
-        return;
-    }
-    if (!_registerPromise) {
-        _registerPromise = _doRegister();
-    }
-    return _registerPromise;
-}
-
 async function _doRegister() {
     if (!window.proj4) {
         await loadJS(PROJ4_PATH);
@@ -72,6 +58,20 @@ async function _doRegister() {
     ol.proj.proj4.register(proj4);
 
     _registered = true;
+}
+
+/**
+ * Register commonly used projections with proj4 and OpenLayers.
+ * Safe to call multiple times — only runs once.
+ */
+export async function ensureProjectionsRegistered() {
+    if (_registered) {
+        return;
+    }
+    if (!_registerPromise) {
+        _registerPromise = _doRegister();
+    }
+    return _registerPromise;
 }
 
 /**

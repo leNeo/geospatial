@@ -11,11 +11,7 @@
             </xpath>
             <field name="has_type" position="before">
                 <field name="is_xyz_tiles" invisible="1" />
-                <group
-                    string="XYZ Tiles"
-                    invisible="not is_xyz_tiles"
-                    colspan="4"
-                >
+                <group string="XYZ Tiles" invisible="not is_xyz_tiles" colspan="4">
                     <field name="xyz_min_zoom" />
                     <field name="xyz_max_zoom" />
                     <field name="xyz_tile_projection" required="is_xyz_tiles" />
