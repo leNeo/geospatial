@@ -14,3 +14,9 @@ This module provides:
   lets a user redraw the geometry of an existing record (`drawOnRecord`).
 - Generic geometry / SRID utilities (`geo_utils`): WKB hex decoding,
   Polygon → MultiPolygon normalization and SRID resolution helpers.
+- A measure toolbox available to every user (read-only): live GPS (WGS84)
+  coordinates of the mouse on hover, a distance ruler, a polygon
+  surface/perimeter tool, a proximity check that flags pairs of objects closer
+  than a given threshold, and clipboard export of the last / all measurements.
+  Measurements are geodesic (`ol.sphere`), so they stay correct in any map
+  projection (e.g. EPSG:2056 with `geoengine_swisstopo`).

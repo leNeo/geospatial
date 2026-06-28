@@ -1,0 +1,94 @@
+/* Measure toolbox — positioned on the right side so it never collides with
+   the core draw/select/edit controls (left side, shown only to admins). */
+.geoengine-measure-coord-control {
+    top: 4em;
+    right: 0.5em;
+}
+
+.geoengine-measure-distance-control {
+    top: 6em;
+    right: 0.5em;
+}
+
+.geoengine-measure-area-control {
+    top: 8em;
+    right: 0.5em;
+}
+
+.geoengine-measure-proximity-control {
+    top: 10em;
+    right: 0.5em;
+}
+
+.geoengine-measure-copy-last-control {
+    top: 12em;
+    right: 0.5em;
+}
+
+.geoengine-measure-copy-all-control {
+    top: 14em;
+    right: 0.5em;
+}
+
+.geoengine-measure-clear-control {
+    top: 16em;
+    right: 0.5em;
+}
+
+/* Coordinate readout toggle stays highlighted independently of the
+   core controls (it does not use the shared .selected-control class). */
+.geoengine-coord-active > i {
+    color: #71639e;
+}
+
+/* Live GPS / native coordinate readout. The .ol-control class is intentionally
+   omitted (no button chrome), so position must be declared explicitly here —
+   otherwise bottom/left/transform are ignored and the box renders off-screen. */
+.geoengine-coord-box {
+    position: absolute;
+    z-index: 1000;
+    bottom: 0.5em;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 2px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: nowrap;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+/* Measurement tooltips that follow the geometry. */
+.geoengine-measure-tooltip {
+    position: relative;
+    padding: 3px 7px;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.geoengine-measure-tooltip-measuring {
+    opacity: 0.9;
+    font-weight: bold;
+}
+
+.geoengine-measure-tooltip-static {
+    background-color: #71639e;
+    color: #fff;
+}
+
+.geoengine-measure-tooltip-static::before {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    margin-left: -6px;
+    border: 6px solid transparent;
+    border-top-color: #71639e;
+}
