@@ -1,11 +1,3 @@
-## 19.0.1.0.1
-
-- Migration to Odoo 19.0.
-- Migrated JavaScript frontend to OWL/ESM architecture.
-- Updated OpenLayers to version 10.5.0.
-- Updated Chroma.js to version 3.1.2.
-- Refactored domain handling for Odoo 19 ORM compatibility.
-
 ## 16.0.1.0.0 (2023-03-20)
 
 - LayerSwitcher has been removed as it was not really practical. A

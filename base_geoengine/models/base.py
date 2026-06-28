@@ -67,33 +67,9 @@ class Base(models.AbstractModel):
         field_obj = self.env["ir.model.fields"]
         if not in_tuple:
             return in_tuple
-        field_id = None
-        display_name = None
-
-        # Odoo may serialize many2one values as:
-        # - [id, display_name]
-        # - {"id": id, "display_name": "..."} (newer formats)
-        # - id
-        if isinstance(in_tuple, (list, tuple)):
-            if in_tuple:
-                field_id = in_tuple[0]
-            if len(in_tuple) > 1:
-                display_name = in_tuple[1]
-        elif isinstance(in_tuple, dict):
-            field_id = in_tuple.get("id")
-            display_name = in_tuple.get("display_name") or in_tuple.get("name")
-        elif isinstance(in_tuple, int):
-            field_id = in_tuple
-
-        if not field_id:
-            return in_tuple
-
-        field = field_obj.browse(field_id).exists()
-        technical_name = field.name if field else False
-        if display_name is None:
-            display_name = technical_name
-
-        return (field_id, technical_name, display_name)
+        name = field_obj.browse(in_tuple[0]).name
+        out = (in_tuple[0], name, in_tuple[1])
+        return out
 
     @api.model
     def get_geoengine_layers(self, view_id=None, view_type="geoengine", **options):
