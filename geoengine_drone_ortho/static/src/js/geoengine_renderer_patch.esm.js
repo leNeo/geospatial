@@ -63,6 +63,14 @@ patch(GeoengineRenderer.prototype, {
         if (this.map && this._xyzTileConfigs && this._xyzTileConfigs.length > 0) {
             _ensureProj4();
             this._addXyzTileLayers();
+            if (!this._xyzViewHooked) {
+                this._xyzViewHooked = true;
+                // Companion modules (e.g. geoengine_swisstopo) replace the map
+                // view to switch projection AFTER this point, which drops the
+                // XYZ layers added beforehand. Re-add them once the new view is
+                // in place. The re-add is idempotent.
+                this.map.on("change:view", () => this._addXyzTileLayers());
+            }
         }
     },
 
@@ -100,7 +108,22 @@ patch(GeoengineRenderer.prototype, {
      * (typically EPSG:3857) to the view projection.
      */
     _addXyzTileLayers() {
+        if (!this.map || !this._xyzTileConfigs || this._xyzTileConfigs.length === 0) {
+            return;
+        }
+        _ensureProj4();
         const layers = this.map.getLayers();
+
+        // Idempotent: drop XYZ ortho layers added by a previous call so a
+        // re-add (e.g. after a projection switch) does not create duplicates.
+        layers
+            .getArray()
+            .slice()
+            .forEach((layer) => {
+                if (layer.get("_xyzOrtho")) {
+                    layers.remove(layer);
+                }
+            });
 
         for (const background of this._xyzTileConfigs) {
             const srcProjCode = background.xyz_tile_projection || "EPSG:3857";
@@ -136,11 +159,12 @@ patch(GeoengineRenderer.prototype, {
             }
 
             const tileLayer = new ol.layer.Tile(layerOpts);
+            tileLayer.set("_xyzOrtho", true);
 
             const insertPos = Math.min(layers.getLength(), 1);
             layers.insertAt(insertPos, tileLayer);
         }
-
-        this._xyzTileConfigs = [];
+        // Keep this._xyzTileConfigs so the layers can be re-added after a later
+        // view/projection switch (see the change:view hook in renderMap).
     },
 });

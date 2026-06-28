@@ -142,89 +142,18 @@ patch(GeoengineRenderer.prototype, {
     },
 
     /**
-     * Filter out 'swisstopo' rasters from createBackgroundLayers.
-     * They will be added later in renderMap after the view is set to EPSG:2056.
+     * Swisstopo rasters are added later in EPSG:2056 (see
+     * _addSwisstopoRasterLayers). Everything else is delegated to super so the
+     * patch chain keeps working — in particular the xyz_tiles handling added by
+     * geoengine_drone_ortho. base_geoengine already handles osm/wmts/d_wms, so
+     * there is no need to re-implement them here (doing so without calling
+     * super would shadow downstream patches depending on the patch order).
      */
     createBackgroundLayers(backgrounds) {
-        const nonSwisstopo = backgrounds.filter((bg) => bg.raster_type !== "swisstopo");
-        return nonSwisstopo
-            .map((background) => {
-                switch (background.raster_type) {
-                    case "osm": {
-                        return new ol.layer.Tile({
-                            title: background.name,
-                            visible: !background.overlay,
-                            type: "base",
-                            opacity: background.opacity,
-                            source: new ol.source.OSM(),
-                        });
-                    }
-                    case "wmts": {
-                        const {source_opt, tilegrid_opt, layer_opt} =
-                            this.createOptions(background);
-                        this.getUrl(background, source_opt);
-                        if (background.format_suffix) {
-                            source_opt.format = background.format_suffix;
-                        }
-                        if (background.request_encoding) {
-                            source_opt.requestEncoding = background.request_encoding;
-                        }
-                        if (background.projection) {
-                            source_opt.projection = ol.proj.get(background.projection);
-                            if (source_opt.projection) {
-                                const projectionExtent =
-                                    source_opt.projection.getExtent();
-                                tilegrid_opt.origin =
-                                    ol.extent.getTopLeft(projectionExtent);
-                            }
-                        }
-                        if (background.resolutions) {
-                            tilegrid_opt.resolutions = background.resolutions
-                                .split(",")
-                                .map(Number);
-                            const nbRes = tilegrid_opt.resolutions.length;
-                            const matrixIds = new Array(nbRes);
-                            for (let i = 0; i < nbRes; i++) {
-                                matrixIds[i] = i;
-                            }
-                            tilegrid_opt.matrixIds = matrixIds;
-                        }
-                        if (background.max_extent) {
-                            const extent = background.max_extent.split(",").map(Number);
-                            layer_opt.extent = extent;
-                            tilegrid_opt.extent = extent;
-                        }
-                        if (background.params) {
-                            source_opt.dimensions = JSON.parse(background.params);
-                        }
-                        source_opt.tileGrid = new ol.tilegrid.WMTS(tilegrid_opt);
-                        layer_opt.source = new ol.source.WMTS(source_opt);
-                        return new ol.layer.Tile(layer_opt);
-                    }
-                    case "d_wms": {
-                        const source_opt_wms = {
-                            params: JSON.parse(background.params_wms),
-                            serverType: background.server_type,
-                        };
-                        const urls = background.url.split(",");
-                        if (urls.length > 1) {
-                            source_opt_wms.urls = urls;
-                        } else {
-                            source_opt_wms.url = urls[0];
-                        }
-                        return new ol.layer.Tile({
-                            title: background.name,
-                            visible: !background.overlay,
-                            opacity: background.opacity,
-                            source: new ol.source.TileWMS(source_opt_wms),
-                        });
-                    }
-                    default: {
-                        return undefined;
-                    }
-                }
-            })
-            .filter(Boolean);
+        const nonSwisstopo = backgrounds.filter(
+            (bg) => bg.raster_type !== "swisstopo"
+        );
+        return super.createBackgroundLayers(nonSwisstopo);
     },
 
     /**
