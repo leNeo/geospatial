@@ -74,8 +74,7 @@ patch(GeoengineRenderer.prototype, {
         }
 
         this._dataSrid = getMainGeoFieldSrid(this);
-        const shouldUse2056View =
-            this._dataSrid === 2056 || this._usesSrid2056Layer();
+        const shouldUse2056View = this._dataSrid === 2056 || this._usesSrid2056Layer();
 
         if (shouldUse2056View) {
             const proj2056 = ol.proj.get("EPSG:2056");
@@ -97,7 +96,7 @@ patch(GeoengineRenderer.prototype, {
                     new ol.View({
                         projection: proj2056,
                         resolutions: SWISSTOPO_VIEW_RESOLUTIONS,
-                        // maxZoom is NOT derived from resolutions.length in OL;
+                        // MaxZoom is NOT derived from resolutions.length in OL;
                         // without this it stays at the default (28) and the
                         // finest resolution levels are unreachable.
                         maxZoom: SWISSTOPO_VIEW_RESOLUTIONS.length - 1,
@@ -150,9 +149,7 @@ patch(GeoengineRenderer.prototype, {
      * super would shadow downstream patches depending on the patch order).
      */
     createBackgroundLayers(backgrounds) {
-        const nonSwisstopo = backgrounds.filter(
-            (bg) => bg.raster_type !== "swisstopo"
-        );
+        const nonSwisstopo = backgrounds.filter((bg) => bg.raster_type !== "swisstopo");
         return super.createBackgroundLayers(nonSwisstopo);
     },
 

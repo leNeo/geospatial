@@ -69,8 +69,7 @@ patch(GeoengineRenderer.prototype, {
      */
     async drawOnRecord(record) {
         const rec =
-            this.props.data.records.find((val) => val.resId === record.resId) ||
-            record;
+            this.props.data.records.find((val) => val.resId === record.resId) || record;
         if (!rec) {
             return;
         }
