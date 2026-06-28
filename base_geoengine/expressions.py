@@ -79,7 +79,8 @@ def _condition_to_sql(
                             active_test=True,
                             alias=rel_alias,
                         )
-                        model._check_field_access(current_field, "read")
+                        # Record rules (ir.rule) on the related model are applied
+                        # inside where_calc(), mirroring BaseModel._search().
                         if operator == "geo_equal":
                             rel_query.add_where(
                                 f'"{alias}"."{field_expr}" {GEO_OPERATORS[operator]} '
@@ -129,24 +130,35 @@ def get_geo_func(current_operator, operator, left, value, params, table):
     """
     This method will call the SQL query corresponding to the requested geo operator
     """
-    geo_func_map = {
-        "geo_greater": current_operator.get_geo_greater_sql,
-        "geo_lesser": current_operator.get_geo_lesser_sql,
-        "geo_equal": current_operator.get_geo_equal_sql,
-        "geo_touch": current_operator.get_geo_touch_sql,
-        "geo_within": current_operator.get_geo_within_sql,
-        "geo_contains": current_operator.get_geo_contains_sql,
-        "geo_intersect": current_operator.get_geo_intersect_sql,
-    }
-    func = geo_func_map.get(operator)
-    if func is None:
-        raise NotImplementedError(f"The operator {operator} is not supported")
-    return func(table, left, value, params)
+    match operator:
+        case "geo_greater":
+            query = current_operator.get_geo_greater_sql(table, left, value, params)
+        case "geo_lesser":
+            query = current_operator.get_geo_lesser_sql(table, left, value, params)
+        case "geo_equal":
+            query = current_operator.get_geo_equal_sql(table, left, value, params)
+        case "geo_touch":
+            query = current_operator.get_geo_touch_sql(table, left, value, params)
+        case "geo_within":
+            query = current_operator.get_geo_within_sql(table, left, value, params)
+        case "geo_contains":
+            query = current_operator.get_geo_contains_sql(table, left, value, params)
+        case "geo_intersect":
+            query = current_operator.get_geo_intersect_sql(table, left, value, params)
+        case _:
+            raise NotImplementedError(f"The operator {operator} is not supported")
+    return query
 
 
 def where_calc(model, domain, active_test=True, alias=None):
     """
     This method is copied from base, we need to create our own query.
+
+    It mirrors ``BaseModel._search``: besides ``active_test`` filtering, it also
+    applies record rules (``ir.rule``) to the resulting query. This matters for
+    the indirect geo-operators, whose spatial sub-query is built here: without
+    it, the sub-query would match related records the user is not allowed to
+    read (row-level security bypass).
     """
     # if the object has an active field ('active', 'x_active'), filter out all
     # inactive records unless they were explicitly asked for
@@ -164,6 +176,16 @@ def where_calc(model, domain, active_test=True, alias=None):
         sql_condition = optimized_domain._to_sql(model, alias, query)
         query.add_where(sql_condition)
 
-        return query
+    # Apply record rules, like BaseModel._search does. Skipped for the
+    # superuser (env.su), exactly as in core.
+    if not model.env.su:
+        model.browse().check_access("read")
+        model_sudo = model.sudo().with_context(active_test=False)
+        sec_domain = model.env["ir.rule"]._compute_domain(model._name, "read")
+        sec_domain = sec_domain.optimize_full(model_sudo)
+        if sec_domain.is_false():
+            query.add_where(SQL("FALSE"))
+        elif not sec_domain.is_true():
+            query.add_where(sec_domain._to_sql(model_sudo, alias, query))
 
     return query

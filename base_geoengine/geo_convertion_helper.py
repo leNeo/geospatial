@@ -1,13 +1,10 @@
 # Copyright 2011-2012 Nicolas Bessi (Camptocamp SA)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 import logging
-import re
 
 from odoo import _
 
 logger = logging.getLogger(__name__)
-
-_HEX_RE = re.compile(r"^[0-9a-fA-F]+$")
 
 try:
     import geojson
@@ -29,10 +26,14 @@ def value_to_shape(value, use_wkb=False):
         if "{" in value:
             geo_dict = geojson.loads(value)
             return shape(geo_dict)
-        elif use_wkb or _HEX_RE.match(value):
+        elif use_wkb:
             return wkb.loads(value, hex=True)
         else:
-            return wkt.loads(value)
+            try:
+                int(value, 16)
+                return wkb.loads(value, hex=True)
+            except Exception:
+                return wkt.loads(value)
     elif hasattr(value, "wkt"):
         if isinstance(value, BaseGeometry):
             return value

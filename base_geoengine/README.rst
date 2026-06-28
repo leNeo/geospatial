@@ -41,7 +41,7 @@ It will allow you to :
 - Extend Odoo models with spatial columns
 
 GeoEngine relies on `OpenLayers <http://openlayers.org>`__ and
-`PostGIS <http://postgis.refractions.net/>`__ technologies.
+`PostgGIS <http://postgis.refractions.net/>`__ technologies.
 
 Postgis is used to store spatial information in databases. OpenLayer is
 used to represent spatial data in other words to show maps and the
@@ -62,7 +62,11 @@ To install this module, you need to have
 
 On Ubuntu:
 
-.. code:: bash
+::
+
+   .. code-block:: bash
+
+..
 
    sudo apt-get install postgis
 
@@ -71,11 +75,11 @@ The module also requires two additional python libs:
 - `Shapely <http://pypi.python.org/pypi/Shapely>`__
 - `geojson <http://pypi.python.org/pypi/geojson>`__
 
-These two additional libs will be installed automatically with the
-module.
+When you will install the module this two additional libs will be
+installed.
 
 For a complete documentation please refer to the `public
-documentation <http://oca.github.io/geospatial/index.html>`__
+documenation <http://oca.github.io/geospatial/index.html>`__
 
 Usage
 =====
@@ -170,15 +174,6 @@ Known issues / Roadmap
 
 Changelog
 =========
-
-19.0.1.0.1
-----------
-
-- Migration to Odoo 19.0.
-- Migrated JavaScript frontend to OWL/ESM architecture.
-- Updated OpenLayers to version 10.5.0.
-- Updated Chroma.js to version 3.1.2.
-- Refactored domain handling for Odoo 19 ORM compatibility.
 
 16.0.1.0.0 (2023-03-20)
 -----------------------
@@ -352,7 +347,7 @@ Contributors
   - Antoni Marroig <amarroig@apsl.net>
   - Miquel Alzanillas <malzanillas@apsl.net>
 
-- Red Butay
+- Red Butay <>
 - Sergio Sancho <sersanchus@gmail.com>
 
 Maintainers
