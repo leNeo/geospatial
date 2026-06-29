@@ -49,6 +49,44 @@ patch(GeoengineRenderer.prototype, {
         this._deactivateMeasureTools();
     },
 
+    /**
+     * Reimplemented (vs base) only to exclude the measurement layer from the
+     * select interactions. Measure geometries carry no record, so selecting
+     * one would reach mountGeoengineRecord with undefined attributes and crash
+     * (evaluating 'attributes.id').
+     */
+    registerInteraction() {
+        const notMeasureLayer = (layer) => layer !== this._measureLayer;
+        this.selectPointerMove = new ol.interaction.Select({
+            condition: ol.events.condition.pointerMove,
+            style: this.selectStyle,
+            layers: notMeasureLayer,
+        });
+        this.selectClick = new ol.interaction.Select({
+            condition: ol.events.condition.click,
+            style: this.selectStyle,
+            layers: notMeasureLayer,
+        });
+        this.selectClick.on("select", (e) => {
+            this.updateInfoBox(e.target.getFeatures());
+        });
+        this.map.addInteraction(this.selectClick);
+        this.map.addInteraction(this.selectPointerMove);
+    },
+
+    /**
+     * Safety net: ignore features without "attributes" (e.g. measurement
+     * geometries) so they never reach mountGeoengineRecord.
+     */
+    updateInfoBox(features) {
+        const feature = features.item(0);
+        if (feature !== undefined && feature.get("attributes") === undefined) {
+            this.hidePopup();
+            return;
+        }
+        return super.updateInfoBox(...arguments);
+    },
+
     // ---- Setup ----------------------------------------------------------
 
     _setupMeasureControls() {
