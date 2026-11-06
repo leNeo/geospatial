@@ -25,6 +25,9 @@
             "base_geoengine/static/src/css/style.css",
             "base_geoengine/static/lib/geostats-2.1.0/geostats.css",
         ],
+        "web.assets_unit_tests": [
+            "base_geoengine/static/tests/**/*.test.js",
+        ],
         # Note: Third-party libraries (ol.js, chroma.js, geostats.js) are loaded
         # dynamically via loadJS() in geoengine_libs.esm.js to avoid bundler issues
     },

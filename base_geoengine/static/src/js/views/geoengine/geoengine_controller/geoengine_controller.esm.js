@@ -119,14 +119,17 @@ export class GeoengineController extends Component {
      */
     async openRecord(resModel, resId, viewId) {
         const {views} = await this.view.loadViews({resModel, views: [[false, "form"]]});
-        this.actionService.doAction({
-            type: "ir.actions.act_window",
-            res_model: resModel,
-            views: viewId || [[views.form.id, "form"]],
-            res_id: resId,
-            target: "new",
-            context: {edit: false, create: false},
-        });
+        return this.actionService.doAction(
+            {
+                type: "ir.actions.act_window",
+                res_model: resModel,
+                views: viewId || [[views.form.id, "form"]],
+                res_id: resId,
+                target: "new",
+                context: {edit: this.editable, create: false},
+            },
+            {onClose: () => this.onSaveRecord()}
+        );
     }
 
     /**
@@ -208,6 +211,7 @@ GeoengineController.template = "base_geoengine.GeoengineController";
 GeoengineController.components = {Layout, SearchBar};
 GeoengineController.props = {
     ...standardViewProps,
+    env: {type: Object, optional: true},
     Model: Function,
     Renderer: Function,
     archInfo: Object,
